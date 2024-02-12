@@ -1,0 +1,10 @@
+mutation AddColumn($columnTitle: String!){
+    addColumn(columnTitle: $columnTitle){
+        id,
+        columnTitle,
+        cards{
+            id,
+            cardText
+        }
+    }
+}

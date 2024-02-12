@@ -1,0 +1,3 @@
+mutation ClearColumn($columnId: ID!){
+    clearColumn(columnId: $columnId)
+}

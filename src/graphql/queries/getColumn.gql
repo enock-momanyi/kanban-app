@@ -1,0 +1,10 @@
+query getColumn{
+    columns{
+        id,
+        columnTitle,
+        cards {
+            id,
+            cardText
+        }
+    }
+}

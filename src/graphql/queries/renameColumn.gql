@@ -1,0 +1,10 @@
+mutation RenameColumn($columnId: ID!,$ columnTitle: String!){
+    renameColumn(columnId: $columnId, columnTitle: $columnTitle){
+        id,
+        columnTitle,
+        cards{
+            id,
+            cardText
+        }
+    }
+}
