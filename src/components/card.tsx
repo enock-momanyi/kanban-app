@@ -1,12 +1,12 @@
 import { TextField } from '@mui/material';
 
-import { useRef, useState } from 'react';
+import { DragEvent, useRef, useState } from 'react';
 
 const CardComponent = ({cardId, cardText, editText}) => {
 
-    const [disableEdit, setDisableEdit] = useState(true)
+    const [disableEdit, setDisableEdit] = useState<boolean>(true)
 
-    const cardTextRef = useRef()
+    const cardTextRef = useRef<HTMLInputElement>()
 
     const handleDoubleClick = () => {
         /**
@@ -23,13 +23,13 @@ const CardComponent = ({cardId, cardText, editText}) => {
             return
         }
 
-        const updatedText = cardTextRef.current.value.trim()
+        const updatedText = cardTextRef?.current?.value?.trim()
         if(updatedText !== "" && cardText !== updatedText){
             editText(cardId,updatedText)
         }
         setDisableEdit(true)
     }
-    const handleOnDrag = (e) => {
+    const handleOnDrag = (e: DragEvent<HTMLDivElement>) => {
         /**
          * set the caedId as the data to be tranferred on onDrag event
          */
@@ -37,12 +37,12 @@ const CardComponent = ({cardId, cardText, editText}) => {
     }
 
     return(
-        <>
         <TextField 
             id='outlined-textarea'
             defaultValue={cardText} 
             variant='filled' 
             multiline
+            rows={4}
             draggable
             inputRef={cardTextRef}
             onDoubleClick={handleDoubleClick}
@@ -51,7 +51,6 @@ const CardComponent = ({cardId, cardText, editText}) => {
             onDragStart={(e) => handleOnDrag(e)}
             sx={{width:"90%"}}
             />
-        </>
     )
 }
 

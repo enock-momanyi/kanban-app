@@ -6,14 +6,15 @@ import { useState } from "react";
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import MoreHorizSharpIcon from '@mui/icons-material/MoreHorizSharp';
+import { MenuItemValue, PositionMenuProp } from "../interfaces/types";
 
-export default function PositionedMenu({menuValues}) {
+export default function PositionedMenu({menuValues}:PositionMenuProp) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
-  const handleClick = (event) => {
+  const handleClick = (event: { currentTarget: any; }) => {
     setAnchorEl(event.currentTarget);
   };
-  const handleClose = (menuFunction) => {
+  const handleClose = (menuFunction: Function) => {
     setAnchorEl(null);
     if(typeof menuFunction === 'function'){
         menuFunction();
@@ -47,7 +48,7 @@ export default function PositionedMenu({menuValues}) {
         }}
       >
         {
-            menuValues.map((mitem) =>(
+            menuValues.map((mitem:MenuItemValue) =>(
                 <MenuItem key={mitem.text} onClick={() => handleClose(mitem.func)}>{mitem.text}</MenuItem>
             ) )
         }

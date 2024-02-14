@@ -1,40 +1,42 @@
 import { ApolloServer } from "@apollo/server"
 import {startStandaloneServer} from '@apollo/server/standalone'
 
-import db from './db.js'
-import { typeDefs } from "./schema.js"
+import * as db from './db'
+import { typeDefs } from "./schema"
 import { startServerAndCreateNextHandler } from "@as-integrations/next"
+import { CardInt, ColumnInt } from "../../../interfaces/types"
+import { NextApiHandler } from "next"
 
 
 const resolvers = {
     Query: {
         columns(){
-            return db.columns
+            return db.default.columns
         },
         column(_,args){
-            return db.columns.find((column) => column.id === args.id)
+            return db.default.columns.find((column: ColumnInt) => column.id === args.id)
         },
         hello(){
             return "Hello, world!"
         },
         allcards(){
-            return db.cards
+            return db.default.cards
         }
 
     },
     Column:{
         cards(parent){
-            return db.cards.filter((card) => card.columnId === parent.id.toString())
+            return db.default.cards.filter((card: CardInt) => card.columnId === parent.id.toString())
         }
     },
     Mutation:{
         addColumn(_,args){
-            if(db.columns.length == 5) return
+            if(db.default.columns.length == 5) return
             let column = {
-                id: db.columns.length + 1,
+                id: db.default.columns.length + 1,
                 columnTitle: args.columnTitle
             }
-            db.columns.push(column)
+            db.default.columns.push(column)
             return column
         },
         addCard(_,args){
@@ -43,28 +45,28 @@ const resolvers = {
                 columnId: args.columnId,
                 cardText: args.cardText
             }
-            db.cards.push(card)
+            db.default.cards.push(card)
             return card
         },
         renameColumn(_, args){
-            db.columns = db.columns.map((col) => {
+            db.default.columns = db.default.columns.map((col: ColumnInt) => {
                 if(col.id.toString() === args.columnId){
                     return {...col, columnTitle: args.columnTitle}
                 }
                 return col
             })
-            return db.columns.find((col)=> col.id.toString() === args.columnId)
+            return db.default.columns.find((col: ColumnInt)=> col.id.toString() === args.columnId)
         },
         clearColumn(_,args){
-            db.cards = db.cards.filter((cd) => cd.columnId.toString() !== args.columnId)
+            db.default.cards = db.default.cards.filter((cd: CardInt) => cd.columnId.toString() !== args.columnId)
         },
         deleteColumn(_, args){
-            db.columns = db.columns.filter((col) => col.id.toString() !== args.columnId)
-            db.cards = db.cards.filter((cd) => cd.columnId.toString() !== args.columnId)
+            db.default.columns = db.default.columns.filter((col: ColumnInt) => col.id.toString() !== args.columnId)
+            db.default.cards = db.default.cards.filter((cd: CardInt) => cd.columnId.toString() !== args.columnId)
         },
         editCard(_,args){
             let card;
-            db.cards= db.cards.map((cd) => {
+            db.default.cards= db.default.cards.map((cd: CardInt) => {
                 if(cd.id.toString() === args.cardId){
                     card = {...cd,cardText: args.updatedText}
                     return card
@@ -75,25 +77,25 @@ const resolvers = {
         },
         changeCardColumnId(_, args){
             let card;
-            db.cards= db.cards.map((cd) => {
+            db.default.cards= db.default.cards.map((cd: CardInt) => {
                 if(cd.id.toString() === args.cardId){
                     card = {...cd,columnId: args.newColumnId}
                     return card
                 }
                 return cd
             })
-            return db.columns          
+            return db.default.columns          
         }
     }
 }
 
-const server = new ApolloServer({
+const server: ApolloServer = new ApolloServer({
     typeDefs,
     resolvers
 })
 
-const handler = startServerAndCreateNextHandler(server,{
-    context: async(req, res) => ({req,res})
+const handler:NextApiHandler = startServerAndCreateNextHandler(server,{
+    context: async(req: Request, res: Response) => ({req,res})
 })
 
 export default handler

@@ -6,55 +6,68 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 
 import CardComponent from "./card";
-import ADD_CARD from '@/graphql/queries/addCard.gql'
-import CLEAR_COLUMN from '@/graphql/queries/clearColumn.gql'
-import RENAME_COLUMN from '@/graphql/queries/renameColumn.gql'
-import EDIT_CARD from '@/graphql/queries/editCard.gql'
-import { Box, CardActions, Typography } from "@mui/material";
+import ADD_CARD from '../graphql/queries/addCard.gql'
+import CLEAR_COLUMN from '../graphql/queries/clearColumn.gql'
+import RENAME_COLUMN from '../graphql/queries/renameColumn.gql'
+import EDIT_CARD from '../graphql/queries/editCard.gql'
+import { Box, CardActions } from "@mui/material";
 import InputComponent from "./InputComponent";
 import PositionedMenu from "./PositionedMenu";
-const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, updateAddCardState}) => {
-    const [allowAddCard, setAllowAddCard] = useState(false);
-    const columnTitleRef = useRef()
-    const [rename,setRename] = useState(false);
+import { AddCardFeed, AddColumnFeed, ColumnComponentProps } from "../interfaces/types";
+const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, updateAddCardState, setMessage}:ColumnComponentProps) => {
+    const [allowAddCard, setAllowAddCard] = useState<boolean>(false);
+    const columnTitleRef = useRef<HTMLInputElement>()
+    const [rename,setRename] = useState<boolean>(false);
     //mutation to handle the action of adding a card to  a column
-    const [addACard, {datam}] = useMutation(ADD_CARD, {
-        onCompleted: (cd) => {
+    const [addACard] = useMutation(ADD_CARD, {
+        onCompleted: (cd:{addCard:AddCardFeed}) => {
             if(cd.addCard.id){
             updateAddCardState(columnId, cd.addCard)
             }
+        },
+        onError: (cd)=> {
+            //updateAddCardState(columnId, cd?.addCard)
+            setMessage("Network Offline! Card not moved in DB")
         }
     })
     //mutation to handle the action of removing all cards in  a column
-    const [clearAColumn, {datac}] = useMutation(CLEAR_COLUMN, {
+    const [clearAColumn] = useMutation(CLEAR_COLUMN, {
         onCompleted: ()=>{
             clearCardState(columnId)
+            setMessage(null)
+        },
+        onError: () => {
+            setMessage("Network offline! Cards not deleted.")
         }
     })
     //mutation to handle the action of renaming a column 
-    const [renameAColumn, {datar}] = useMutation(RENAME_COLUMN,{
-        onCompleted: (rc) => {
+    const [renameAColumn] = useMutation(RENAME_COLUMN,{
+        onCompleted: (rc:{renameColumn: AddColumnFeed}) => {
             columnTitle = rc.renameColumn.columnTitle
             setRename(false)
+            setMessage(null)
+        },
+        onError: () => {
+            setMessage("Network Offline! Cannot rename at this time.")
         }
     })
     //mutation to handle the action of editing a card in a column
-    const [editACard, {datae}] = useMutation(EDIT_CARD, {
+    const [editACard] = useMutation(EDIT_CARD, {
         onCompleted: () => {
-
+            setMessage(null)
         },
         onError: (err)=>{
-            console.log(err)
+            setMessage("Network Offline! Cannot edit the card at this time.")
         }
     })
 
-    const cardTitle = useRef();
-    function addCard(e){
+    const cardTitle = useRef<HTMLInputElement>();
+    function addCard(e: { preventDefault: () => void; }){
         /**
          * Handles the add card functionality in a column by calling the addACard mutation
          */
         e.preventDefault()
-        const titleValue = cardTitle.current.value;
+        const titleValue = cardTitle?.current?.value;
         if(!titleValue) return
         try{
             addACard({variables: {cardText: titleValue, columnId: columnId}})
@@ -65,7 +78,7 @@ const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, up
         cardTitle.current.value = ''
         toggleCard()
     }
-    function editCard(cardId, updatedText){
+    function editCard(cardId: String, updatedText: String){
         /**
          * Update the contents for card with if:CardId
          */

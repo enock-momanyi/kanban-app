@@ -1,58 +1,54 @@
 
-import { useEffect, useRef, useState } from "react";
+import { DragEvent, Ref, useEffect, useRef, useState } from "react";
 import Column from "./Column";
 import Button from '@mui/material/Button';
 import { useQuery, useMutation } from "@apollo/client";
-import GET_COLUMNS from '@/graphql/queries/getColumn.gql'
-import ADD_COLUMN from '@/graphql/queries/addColumn.gql'
-import DELETE_COLUMN from '@/graphql/queries/deleteColumn.gql'
-import MOVE_CARD from '@/graphql/queries/moveCard.gql'
-import { Box, Breadcrumbs, Link } from "@mui/material";
+import GET_COLUMNS from '../graphql/queries/getColumn.gql'
+import ADD_COLUMN from '../graphql/queries/addColumn.gql'
+import DELETE_COLUMN from '../graphql/queries/deleteColumn.gql'
+import MOVE_CARD from '../graphql/queries/moveCard.gql'
+import { Alert, Box, Breadcrumbs, Link } from "@mui/material";
 import InputComponent from "./InputComponent";
+import { AddColumnFeed, CardInt } from "../interfaces/types";
 
 
 const Board = () => {
     const [columns, setColumns] = useState([])
-    const [showColumn, setShowColumn] = useState(true);
-    const [is5columns, setIs5Columns] = useState(false);
-    const columnTitleRef = useRef()
+    const [showColumn, setShowColumn] = useState<Boolean>(true);
+    const [is5columns, setIs5Columns] = useState<Boolean>(false);
+    const [message, setMessage] = useState<String>(null)
+    const columnTitleRef= useRef<HTMLInputElement>()
 
     const {data, loading, error,refetch} = useQuery(GET_COLUMNS)
-    const [addAColumn, {datam}] = useMutation(ADD_COLUMN,{
-        onCompleted: (dt) => {
-            console.log(dt)
+    const [addAColumn] = useMutation(ADD_COLUMN,{
+        onCompleted: (dt:{addColumn:AddColumnFeed}) => {
+            setMessage(null)
             refetch();
             //setColumns([...columns,dt.addColumn])
-        }
-    })
-    const [deleteAColumn, {datad}] = useMutation(DELETE_COLUMN,{
-        onCompleted:()=>{
-            refetch()
-        }
-    })
-    const [moveACard, { datamc }] = useMutation(MOVE_CARD, {
-        onCompleted: (dat) => {
-          setColumns((prevColumns) => {
-            // Find the column corresponding to the new column ID
-            const updatedColumns = prevColumns.map((col) => {
-              if (col.id === dat.changeCardColumnId.newColumnId) {
-                // Update the cards array of this column
-                return {
-                  ...col,
-                  cards: [
-                    // Keep the existing cards except the one moved
-                    ...col.cards.filter((card) => card.id !== dat.changeCardColumnId.cardId),
-                    // Add the moved card to this column
-                    // Assuming dat.changeCardColumnId.newCard is the new card object
-                    dat.changeCardColumnId.newCard,
-                  ],
-                };
-              }
-              return col;
-            });
-            return updatedColumns;
-          });
         },
+        onError: () => {
+            setMessage("Network offline. Unable to add column in the database!")
+        }
+    })
+    const [deleteAColumn] = useMutation(DELETE_COLUMN,{
+        onCompleted:()=>{
+            setMessage(null)
+            refetch()
+        },
+        onError: () => {
+            setMessage("Network offline, unable to delete column.")
+        }
+    })
+    const [moveACard] = useMutation(MOVE_CARD, {
+        onCompleted: (dat:{changeCardColumnId:AddColumnFeed[]}) => {
+            setMessage(null)
+          setColumns(dat.changeCardColumnId.map((newCard: AddColumnFeed) => {
+            return { id:newCard.id,columnTitle: newCard.columnTitle, cards: newCard.cards}
+          }));
+        },
+        onError: () => {
+            setMessage("Network offline!")
+        }
       });
       
     useEffect(() => {
@@ -69,9 +65,9 @@ const Board = () => {
     function expandAddColumn(){
         setShowColumn(!showColumn);
     }
-    function addColumn(e){
+    function addColumn(e: { preventDefault: () => void; }){
         e.preventDefault()
-        const titleValue = columnTitleRef.current.value;
+        const titleValue = columnTitleRef?.current?.value;
         if(!titleValue) return
         try{
         addAColumn({variables: {columnTitle:titleValue}})
@@ -86,11 +82,11 @@ const Board = () => {
             setIs5Columns(true)
         }
     }
-    function deleteColumn(columnId){
+    function deleteColumn(columnId: String){
         deleteAColumn({variables:{columnId}})
         //setColumns(columns.filter((col) => col.id.toString() !== columnId))
     }
-    function updateAddCardState(columnId,newCard){
+    function updateAddCardState(columnId: String,newCard: CardInt){
         const updatedColumns= columns.slice()
         setColumns(updatedColumns.map((col)=>{
             if(col.id === columnId){
@@ -99,7 +95,7 @@ const Board = () => {
             return col
         }))
     }
-    function clearCardState(columnId){
+    function clearCardState(columnId: String){
         const updatedColumns= columns.slice()
         setColumns(updatedColumns.map((col)=>{
             if(col.id === columnId){
@@ -108,14 +104,14 @@ const Board = () => {
             return col
         }))
     }
-    const handleOnDrop = (e, columnId) => {
+    const handleOnDrop = (e: DragEvent<HTMLDivElement>, columnId: String) => {
         e.preventDefault()
         const cardId = e.dataTransfer.getData("cardId")
         moveACard({variables:{
             cardId,newColumnId: columnId
         }})
     }
-    const handleOnDragOver = (e) => {
+    const handleOnDragOver = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
     }
     return(
@@ -130,6 +126,7 @@ const Board = () => {
                 Kanban
                 </Link>
             </Breadcrumbs>
+            {message && <Alert severity="error">{message}</Alert>}
             <Box sx={{display:"flex"}}>
        {columns.map((cl,i) => {
                    
@@ -146,6 +143,7 @@ const Board = () => {
                     cardSet={cl.cards} deleteColumn={deleteColumn}
                     updateAddCardState={updateAddCardState}
                     clearCardState={clearCardState}
+                    setMessage={setMessage}
                     />
                     </Box>
             )})

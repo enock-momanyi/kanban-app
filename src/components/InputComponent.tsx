@@ -1,7 +1,8 @@
 import { Box, Card,TextField} from "@mui/material";
 import Button from '@mui/material/Button';
+import { InputComponentProps } from "../interfaces/types";
 //Input component with an input field and receives props to handle add and cancel operations 
-const InputComponent = ({label, inputRefVar, cancelFunc, addFunc}) => {
+const InputComponent = ({label, inputRefVar, cancelFunc, addFunc}: InputComponentProps) => {
     return (
         <Card sx={{boxShadow:"none", p:"10px"}}>
         <Box >
