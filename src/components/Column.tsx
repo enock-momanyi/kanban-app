@@ -22,12 +22,8 @@ const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, up
     const [addACard] = useMutation(ADD_CARD, {
         onCompleted: (cd:{addCard:AddCardFeed}) => {
             if(cd.addCard.id){
-            updateAddCardState(columnId, cd.addCard)
+            updateAddCardState(columnId,cd.addCard,undefined)
             }
-        },
-        onError: (cd)=> {
-            //updateAddCardState(columnId, cd?.addCard)
-            setMessage("Network Offline! Card not moved in DB")
         }
     })
     //mutation to handle the action of removing all cards in  a column
@@ -62,7 +58,7 @@ const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, up
     })
 
     const cardTitle = useRef<HTMLInputElement>();
-    function addCard(e: { preventDefault: () => void; }){
+    async function addCard(e: { preventDefault: () => void; }){
         /**
          * Handles the add card functionality in a column by calling the addACard mutation
          */
@@ -70,10 +66,9 @@ const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, up
         const titleValue = cardTitle?.current?.value;
         if(!titleValue) return
         try{
-            addACard({variables: {cardText: titleValue, columnId: columnId}})
+            await addACard({variables: {cardText: titleValue, columnId: columnId}})
         }catch(error){
-            console.error(error)
-            return
+            updateAddCardState(columnId, undefined,titleValue)
         }
         cardTitle.current.value = ''
         toggleCard()

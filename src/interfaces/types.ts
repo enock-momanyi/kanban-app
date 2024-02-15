@@ -9,6 +9,9 @@ export interface ColumnInt{
     id: string
     columnTitle: string
 }
+export interface ColumnCardInt extends ColumnInt{
+    cards: CardInt[]
+}
 export interface CardComponentProps{
     cardId: string
     cardText: String
@@ -45,4 +48,10 @@ export interface AddColumnFeed extends ColumnInt{
 
 export interface AddCardFeed extends CardInt{
     _typename: String
+}
+
+export interface updateCardParams{
+    columnId: string
+    newCard?: CardInt
+    cardText?: string
 }

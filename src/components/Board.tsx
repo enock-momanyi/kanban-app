@@ -9,7 +9,7 @@ import DELETE_COLUMN from '../graphql/queries/deleteColumn.gql'
 import MOVE_CARD from '../graphql/queries/moveCard.gql'
 import { Alert, Box, Breadcrumbs, Link } from "@mui/material";
 import InputComponent from "./InputComponent";
-import { AddColumnFeed, CardInt } from "../interfaces/types";
+import { AddColumnFeed, CardInt, ColumnCardInt, ColumnInt } from "../interfaces/types";
 
 
 const Board = () => {
@@ -19,15 +19,16 @@ const Board = () => {
     const [message, setMessage] = useState<String>(null)
     const columnTitleRef= useRef<HTMLInputElement>()
 
-    const {data, loading, error,refetch} = useQuery(GET_COLUMNS)
+    const {data, error,refetch} = useQuery(GET_COLUMNS,{
+        onError:()=>{
+            setMessage("network offline")
+        }
+    })
     const [addAColumn] = useMutation(ADD_COLUMN,{
         onCompleted: (dt:{addColumn:AddColumnFeed}) => {
             setMessage(null)
             refetch();
             //setColumns([...columns,dt.addColumn])
-        },
-        onError: () => {
-            setMessage("Network offline. Unable to add column in the database!")
         }
     })
     const [deleteAColumn] = useMutation(DELETE_COLUMN,{
@@ -45,9 +46,6 @@ const Board = () => {
           setColumns(dat.changeCardColumnId.map((newCard: AddColumnFeed) => {
             return { id:newCard.id,columnTitle: newCard.columnTitle, cards: newCard.cards}
           }));
-        },
-        onError: () => {
-            setMessage("Network offline!")
         }
       });
       
@@ -55,25 +53,24 @@ const Board = () => {
         if(data){
             setColumns(data.columns)
         }
+        if(error){
+            console.log(error)
+            setMessage("Network offline!")
+        }
     },[data])
-
-    if(error){
-        console.log(error)
-        return null
-    }
 
     function expandAddColumn(){
         setShowColumn(!showColumn);
     }
-    function addColumn(e: { preventDefault: () => void; }){
+    async function addColumn(e: { preventDefault: () => void; }){
         e.preventDefault()
         const titleValue = columnTitleRef?.current?.value;
         if(!titleValue) return
         try{
-        addAColumn({variables: {columnTitle:titleValue}})
+        await addAColumn({variables: {columnTitle:titleValue}})
         }catch(error){
-            console.log(error)
-            return
+            setColumns([...columns,{id:(columns.length+1).toString(), columnTitle:titleValue,cards:[]}])
+            setMessage("Network offline. Unable to add column in the database!")
         }
         //setColumns([...columns, <Column columnTitle={titleValue} />])
         columnTitleRef.current.value = ''
@@ -82,14 +79,22 @@ const Board = () => {
             setIs5Columns(true)
         }
     }
-    function deleteColumn(columnId: String){
-        deleteAColumn({variables:{columnId}})
+    async function deleteColumn(columnId: String){
+        try{
+        await deleteAColumn({variables:{columnId}})
+        }catch(error){
+            setMessage("Network offline. Unable to add column in the database!")
+        }
         //setColumns(columns.filter((col) => col.id.toString() !== columnId))
     }
-    function updateAddCardState(columnId: String,newCard: CardInt){
+    function updateAddCardState(columnId: String,newCard?: CardInt, cardText?: string){
         const updatedColumns= columns.slice()
-        setColumns(updatedColumns.map((col)=>{
+        setColumns(updatedColumns.map((col: ColumnCardInt)=>{
             if(col.id === columnId){
+                if(newCard === undefined){
+                    const randomId = Math.floor(Math.random()*10000).toString()
+                    return {...col,cards:[...col.cards,{id:randomId,columnId,cardText}]}
+                }
                 return {...col,cards:[...col.cards,newCard]}
             }
             return col
@@ -104,12 +109,35 @@ const Board = () => {
             return col
         }))
     }
-    const handleOnDrop = (e: DragEvent<HTMLDivElement>, columnId: String) => {
+    const handleOnDrop = async (e: DragEvent<HTMLDivElement>, columnId: String) => {
         e.preventDefault()
         const cardId = e.dataTransfer.getData("cardId")
-        moveACard({variables:{
+        try{
+        await moveACard({variables:{
             cardId,newColumnId: columnId
         }})
+    }catch(error){
+        const columnCopy = columns.slice()
+        let card!:CardInt
+        columns.map((col)=>{
+            card = col.cards.find((cd: CardInt)=>{
+                return cd.id === cardId
+            })
+            if(card){
+                setColumns(columnCopy.map((col:ColumnCardInt)=>{
+                    if(card.columnId === col.id){
+                        return {...col,cards: col.cards.filter((cd => cd.id !== card.id))}
+                    }else if(col.id === columnId){
+                        return {...col,cards:[...col.cards, {...card, columnId: columnId}]}
+                    }
+                    return col
+                }))
+                setMessage("Network offline!")
+                return
+            }
+        })
+
+    }
     }
     const handleOnDragOver = (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault()
