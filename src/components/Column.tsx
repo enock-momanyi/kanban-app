@@ -14,7 +14,7 @@ import { Box, CardActions } from "@mui/material";
 import InputComponent from "./InputComponent";
 import PositionedMenu from "./PositionedMenu";
 import { AddCardFeed, AddColumnFeed, ColumnComponentProps } from "../interfaces/types";
-const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, updateAddCardState, setMessage}:ColumnComponentProps) => {
+const ColumnComponent = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, updateAddCardState, setMessage}:ColumnComponentProps) => {
     const [allowAddCard, setAllowAddCard] = useState<boolean>(false);
     const columnTitleRef = useRef<HTMLInputElement>()
     const [rename,setRename] = useState<boolean>(false);
@@ -142,4 +142,4 @@ const Column = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, up
     )
 }
 
-export default Column
+export default ColumnComponent

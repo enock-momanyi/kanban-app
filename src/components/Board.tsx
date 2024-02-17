@@ -1,15 +1,13 @@
 
 import { DragEvent, Ref, useEffect, useRef, useState } from "react";
-import Column from "./Column";
 import Button from '@mui/material/Button';
 import { useQuery, useMutation } from "@apollo/client";
 import GET_COLUMNS from '../graphql/queries/getColumn.gql'
 import ADD_COLUMN from '../graphql/queries/addColumn.gql'
-import DELETE_COLUMN from '../graphql/queries/deleteColumn.gql'
-import MOVE_CARD from '../graphql/queries/moveCard.gql'
 import { Alert, Box, Breadcrumbs, Link } from "@mui/material";
 import InputComponent from "./InputComponent";
 import { AddColumnFeed, CardInt, ColumnCardInt, ColumnInt } from "../interfaces/types";
+import ColumnList from "./ColumnList";
 
 
 const Board = () => {
@@ -31,24 +29,7 @@ const Board = () => {
             //setColumns([...columns,dt.addColumn])
         }
     })
-    const [deleteAColumn] = useMutation(DELETE_COLUMN,{
-        onCompleted:()=>{
-            setMessage(null)
-            refetch()
-        },
-        onError: () => {
-            setMessage("Network offline, unable to delete column.")
-        }
-    })
-    const [moveACard] = useMutation(MOVE_CARD, {
-        onCompleted: (dat:{changeCardColumnId:AddColumnFeed[]}) => {
-            setMessage(null)
-          setColumns(dat.changeCardColumnId.map((newCard: AddColumnFeed) => {
-            return { id:newCard.id,columnTitle: newCard.columnTitle, cards: newCard.cards}
-          }));
-        }
-      });
-      
+
     useEffect(() => {
         if(data){
             setColumns(data.columns)
@@ -79,69 +60,7 @@ const Board = () => {
             setIs5Columns(true)
         }
     }
-    async function deleteColumn(columnId: String){
-        try{
-        await deleteAColumn({variables:{columnId}})
-        }catch(error){
-            setMessage("Network offline. Unable to add column in the database!")
-        }
-        //setColumns(columns.filter((col) => col.id.toString() !== columnId))
-    }
-    function updateAddCardState(columnId: String,newCard?: CardInt, cardText?: string){
-        const updatedColumns= columns.slice()
-        setColumns(updatedColumns.map((col: ColumnCardInt)=>{
-            if(col.id === columnId){
-                if(newCard === undefined){
-                    const randomId = Math.floor(Math.random()*10000).toString()
-                    return {...col,cards:[...col.cards,{id:randomId,columnId,cardText}]}
-                }
-                return {...col,cards:[...col.cards,newCard]}
-            }
-            return col
-        }))
-    }
-    function clearCardState(columnId: String){
-        const updatedColumns= columns.slice()
-        setColumns(updatedColumns.map((col)=>{
-            if(col.id === columnId){
-                return {...col,cards:[]}
-            }
-            return col
-        }))
-    }
-    const handleOnDrop = async (e: DragEvent<HTMLDivElement>, columnId: String) => {
-        e.preventDefault()
-        const cardId = e.dataTransfer.getData("cardId")
-        try{
-        await moveACard({variables:{
-            cardId,newColumnId: columnId
-        }})
-    }catch(error){
-        const columnCopy = columns.slice()
-        let card!:CardInt
-        columns.map((col)=>{
-            card = col.cards.find((cd: CardInt)=>{
-                return cd.id === cardId
-            })
-            if(card){
-                setColumns(columnCopy.map((col:ColumnCardInt)=>{
-                    if(card.columnId === col.id){
-                        return {...col,cards: col.cards.filter((cd => cd.id !== card.id))}
-                    }else if(col.id === columnId){
-                        return {...col,cards:[...col.cards, {...card, columnId: columnId}]}
-                    }
-                    return col
-                }))
-                setMessage("Network offline!")
-                return
-            }
-        })
-
-    }
-    }
-    const handleOnDragOver = (e: DragEvent<HTMLDivElement>) => {
-        e.preventDefault()
-    }
+ 
     return(
         
         <div>
@@ -156,26 +75,7 @@ const Board = () => {
             </Breadcrumbs>
             {message && <Alert severity="error">{message}</Alert>}
             <Box sx={{display:"flex"}}>
-       {columns.map((cl,i) => {
-                   
-                return(
-                <Box 
-                    key={cl.id}
-                    sx={{position:"relative", mr:"20px"}}
-                    onDragOver={(e) => handleOnDragOver(e)}
-                    onDrop={(e)=> handleOnDrop(e,cl.id)}
-                    >
-                    <Column
-                    key={cl.id}
-                    columnTitle={cl.columnTitle} columnId={cl.id} 
-                    cardSet={cl.cards} deleteColumn={deleteColumn}
-                    updateAddCardState={updateAddCardState}
-                    clearCardState={clearCardState}
-                    setMessage={setMessage}
-                    />
-                    </Box>
-            )})
-        }
+                <ColumnList columns={columns} setMessage={setMessage} setColumns={setColumns} refetch={refetch}/>
 
         <Box>
             {

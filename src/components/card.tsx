@@ -1,8 +1,9 @@
 import { TextField } from '@mui/material';
 
 import { DragEvent, useRef, useState } from 'react';
+import { CardComponentProps } from '../interfaces/types';
 
-const CardComponent = ({cardId, cardText, editText}) => {
+const CardComponent = ({cardId, cardText, editText}:CardComponentProps) => {
 
     const [disableEdit, setDisableEdit] = useState<boolean>(true)
 
