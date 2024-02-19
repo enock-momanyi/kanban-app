@@ -1,4 +1,7 @@
-mutation AddColumn($columnTitle: String!){
+import {gql} from '@apollo/client';
+
+const ADD_COLUMN = gql`
+    mutation AddColumn($columnTitle: String!){
     addColumn(columnTitle: $columnTitle){
         id,
         columnTitle,
@@ -8,3 +11,5 @@ mutation AddColumn($columnTitle: String!){
         }
     }
 }
+`;
+export default ADD_COLUMN;

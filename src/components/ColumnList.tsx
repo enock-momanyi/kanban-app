@@ -3,8 +3,8 @@ import { AddColumnFeed, CardInt, ColumnCardInt } from "../interfaces/types"
 import ColumnComponent from "./Column"
 import { useMutation } from "@apollo/client";
 
-import DELETE_COLUMN from '../graphql/queries/deleteColumn.gql'
-import MOVE_CARD from '../graphql/queries/moveCard.gql'
+import DELETE_COLUMN from "../graphql/mutations/DeleteColumnMutation";
+import MOVE_CARD from "../graphql/mutations/MoveCardMutation";
 import { DragEvent } from "react";
 
 export default function ColumnList({columns,setMessage,setColumns,refetch}:{columns:ColumnCardInt[],setMessage:Function,setColumns:Function, refetch:Function}){

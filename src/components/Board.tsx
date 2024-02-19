@@ -2,8 +2,8 @@
 import { DragEvent, Ref, useEffect, useRef, useState } from "react";
 import Button from '@mui/material/Button';
 import { useQuery, useMutation } from "@apollo/client";
-import GET_COLUMNS from '../graphql/queries/getColumn.gql'
-import ADD_COLUMN from '../graphql/queries/addColumn.gql'
+import GET_COLUMN from "../graphql/queries/GetColumnQuery";
+import ADD_COLUMN from "../graphql/mutations/AddColumnMutation";
 import { Alert, Box, Breadcrumbs, Link } from "@mui/material";
 import InputComponent from "./InputComponent";
 import { AddColumnFeed, CardInt, ColumnCardInt, ColumnInt } from "../interfaces/types";
@@ -17,7 +17,7 @@ const Board = () => {
     const [message, setMessage] = useState<String>(null)
     const columnTitleRef= useRef<HTMLInputElement>()
 
-    const {data, error,refetch} = useQuery(GET_COLUMNS,{
+    const {data, error,refetch} = useQuery(GET_COLUMN,{
         onError:()=>{
             setMessage("network offline")
         }
@@ -50,6 +50,7 @@ const Board = () => {
         try{
         await addAColumn({variables: {columnTitle:titleValue}})
         }catch(error){
+            console.log(error)
             setColumns([...columns,{id:(columns.length+1).toString(), columnTitle:titleValue,cards:[]}])
             setMessage("Network offline. Unable to add column in the database!")
         }

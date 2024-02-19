@@ -6,18 +6,18 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 
 import CardComponent from "./card";
-import ADD_CARD from '../graphql/queries/addCard.gql'
-import CLEAR_COLUMN from '../graphql/queries/clearColumn.gql'
-import RENAME_COLUMN from '../graphql/queries/renameColumn.gql'
-import EDIT_CARD from '../graphql/queries/editCard.gql'
+import ADD_CARD from "../graphql/mutations/AddCardMutation";
+import CLEAR_COLUMN from "../graphql/mutations/ClearColumnMutation";
+import RENAME_COLUMN from "../graphql/mutations/RenameColumnMutation";
+import EDIT_CARD from "../graphql/mutations/EditCardMutation";
 import { Box, CardActions } from "@mui/material";
 import InputComponent from "./InputComponent";
 import PositionedMenu from "./PositionedMenu";
 import { AddCardFeed, AddColumnFeed, ColumnComponentProps } from "../interfaces/types";
 const ColumnComponent = ({columnTitle, columnId, cardSet, deleteColumn,clearCardState, updateAddCardState, setMessage}:ColumnComponentProps) => {
-    const [allowAddCard, setAllowAddCard] = useState<boolean>(false);
+    const [allowAddCard, setAllowAddCard] = useState(false);
     const columnTitleRef = useRef<HTMLInputElement>()
-    const [rename,setRename] = useState<boolean>(false);
+    const [rename,setRename] = useState(false);
     //mutation to handle the action of adding a card to  a column
     const [addACard] = useMutation(ADD_CARD, {
         onCompleted: (cd:{addCard:AddCardFeed}) => {
@@ -40,6 +40,7 @@ const ColumnComponent = ({columnTitle, columnId, cardSet, deleteColumn,clearCard
     const [renameAColumn] = useMutation(RENAME_COLUMN,{
         onCompleted: (rc:{renameColumn: AddColumnFeed}) => {
             columnTitle = rc.renameColumn.columnTitle
+            console.log(columnTitle)
             setRename(false)
             setMessage(null)
         },
@@ -118,7 +119,7 @@ const ColumnComponent = ({columnTitle, columnId, cardSet, deleteColumn,clearCard
                     rename && 
                 <Box>
                 <Button onClick={()=>{setRename(false);columnTitleRef.current.value=columnTitle;}}>Cancel</Button>
-                <Button onClick={renameColumn}>Rename</Button>
+                <Button data-testid="rename-button" onClick={renameColumn}>Rename</Button>
                 </Box>
                 }
             <PositionedMenu menuValues={DropDownItems} />

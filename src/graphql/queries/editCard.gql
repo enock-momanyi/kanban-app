@@ -1,6 +1,0 @@
-mutation EditCard($cardId: ID!, $updatedText: String!){
-    editCard(cardId: $cardId, updatedText: $updatedText){
-        id,
-        cardText
-    }
-}

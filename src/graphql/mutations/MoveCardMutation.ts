@@ -1,4 +1,7 @@
-mutation MoveCard($cardId: ID!, $newColumnId: ID!){
+import {gql} from '@apollo/client';
+
+const MOVE_CARD =gql`
+    mutation MoveCard($cardId: ID!, $newColumnId: ID!){
     changeCardColumnId(cardId: $cardId, newColumnId: $newColumnId){
             id,
             columnTitle,
@@ -8,3 +11,5 @@ mutation MoveCard($cardId: ID!, $newColumnId: ID!){
             }
     }
 }
+`;
+export default MOVE_CARD;

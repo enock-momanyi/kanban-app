@@ -1,4 +1,7 @@
-query getColumn{
+import {gql} from '@apollo/client';
+
+const GET_COLUMN =gql`
+    query getColumn{
     columns{
         id,
         columnTitle,
@@ -8,3 +11,6 @@ query getColumn{
         }
     }
 }
+`;
+
+export default GET_COLUMN;
